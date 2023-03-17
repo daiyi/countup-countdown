@@ -24,9 +24,6 @@ jobs:
         with:
           useLockFile: yarn.lock
           install-command: yarn install
-          
-      - name: Install dependencies
-        uses: bahmutov/npm-install@v1
 
       - name: Build project
         run: yarn build
