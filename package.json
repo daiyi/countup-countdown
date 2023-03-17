@@ -1,0 +1,34 @@
+{
+  "name": "countup-countdown",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@automerge/automerge": "^2.0.2",
+    "@emotion/react": "^11.10.6",
+    "@mantine/core": "^5.10.5",
+    "@mantine/dates": "^5.10.5",
+    "@mantine/hooks": "^5.10.5",
+    "automerge-repo": "^0.0.50",
+    "automerge-repo-network-broadcastchannel": "^0.0.50",
+    "automerge-repo-react-hooks": "^0.0.50",
+    "automerge-repo-storage-localforage": "^0.0.50",
+    "dayjs": "^1.11.7",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "vite-plugin-top-level-await": "^1.3.0",
+    "vite-plugin-wasm": "^3.2.1"
+  },
+  "devDependencies": {
+    "@types/react": "^18.0.27",
+    "@types/react-dom": "^18.0.10",
+    "@vitejs/plugin-react": "^3.1.0",
+    "typescript": "^4.9.3",
+    "vite": "^4.1.0"
+  }
+}
