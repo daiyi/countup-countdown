@@ -19,7 +19,7 @@ export default defineConfig({
       },
       workbox: {
         // cache icons too https://vite-pwa-org.netlify.app/guide/static-assets.html
-        // globPatterns: ["**/*.{js,css,html,ico,png,svg}"],
+        globPatterns: ["**/*.{js,css,html,ico,png,svg}"],
       },
       // includeAssets: ["favicon.ico", "apple-touch-icon.png", "masked-icon.svg"],
       manifest: {
