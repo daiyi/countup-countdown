@@ -20,10 +20,7 @@ jobs:
           node-version: 18
           
       - name: Install dependencies
-        uses: bahmutov/npm-install@v1.6.0
-        with:
-          useLockFile: yarn.lock
-          install-command: yarn install
+        uses: bahmutov/npm-install@1
 
       - name: Build project
         run: yarn build
