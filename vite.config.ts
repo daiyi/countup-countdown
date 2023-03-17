@@ -1,9 +1,12 @@
-import { defineConfig } from "vite"
-import react from "@vitejs/plugin-react"
-import wasm from "vite-plugin-wasm"
-import topLevelAwait from "vite-plugin-top-level-await"
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+import wasm from "vite-plugin-wasm";
+import topLevelAwait from "vite-plugin-top-level-await";
+import path from "path";
 
 export default defineConfig({
+  base: "/" + path.basename(path.dirname(__filename)) + "/",
+
   plugins: [wasm(), topLevelAwait(), react()],
 
   worker: {
@@ -28,4 +31,4 @@ export default defineConfig({
       strict: false,
     },
   },
-})
+});
