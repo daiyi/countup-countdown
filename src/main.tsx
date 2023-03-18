@@ -7,6 +7,7 @@ import { LocalForageStorageAdapter } from "automerge-repo-storage-localforage";
 import { RepoContext } from "automerge-repo-react-hooks";
 import { State, ROOT_ID_KEY, Params, urlDateFormat } from "./types";
 import dayjs from "dayjs";
+import { createParams } from "./util";
 
 const repo = new Repo({
   network: [new BroadcastChannelNetworkAdapter()],
@@ -33,23 +34,3 @@ ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
     </React.StrictMode>
   </RepoContext.Provider>
 );
-
-function createParams(): Params | undefined {
-  const url = new URL(document.location.toString());
-  const params: Params = {};
-  const startDate = url.searchParams.get("s");
-  const endDate = url.searchParams.get("e");
-  const title = url.searchParams.get("t");
-
-  if (startDate) {
-    params.s = dayjs(startDate, urlDateFormat).toDate();
-  }
-  if (endDate) {
-    params.e = dayjs(endDate, urlDateFormat).toDate();
-  }
-  if (title && title.length > 0) {
-    params.t = title;
-  }
-
-  return Object.values(params).length > 0 ? params : undefined;
-}
