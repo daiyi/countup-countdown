@@ -8,16 +8,16 @@ import {
   Title,
   Flex,
   Group,
-  Paper,
   Progress,
+  CopyButton,
 } from "@mantine/core";
 import { Calendar, DatePicker } from "@mantine/dates";
 import { useState } from "react";
 
-import { State } from "./types";
+import { Params, State, urlDateFormat } from "./types";
 import dayjs from "dayjs";
 
-export default function App(props: { rootId: DocumentId }) {
+export default function App(props: { rootId: DocumentId; params?: Params }) {
   const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
   const [showSettings, setShowSettings] = useState(false);
 
@@ -31,9 +31,14 @@ export default function App(props: { rootId: DocumentId }) {
     return <DeleteStorageButton />;
   }
 
-  const countUpDays = dayjs(selectedDate).diff(state.countUpDate, "day");
-  const countUpWeeks = dayjs(selectedDate).diff(state.countUpDate, "week");
-  const countDownDays = dayjs(state.countDownDate).diff(selectedDate, "day");
+  const countUpDate =
+    props.params && props.params.s ? props.params.s : state.countUpDate;
+  const countDownDate =
+    props.params && props.params.e ? props.params.e : state.countDownDate;
+
+  const countUpDays = dayjs(selectedDate).diff(countUpDate, "day");
+  const countUpWeeks = dayjs(selectedDate).diff(countUpDate, "week");
+  const countDownDays = dayjs(countDownDate).diff(selectedDate, "day");
 
   return (
     <MantineProvider
@@ -72,7 +77,7 @@ export default function App(props: { rootId: DocumentId }) {
         />
       )}
       <Flex gap="xl" align="center" direction="column" wrap="wrap">
-        {(state.countUpDate || state.countDownDate) && (
+        {(countUpDate || state.countDownDate) && (
           <Flex
             gap="lg"
             justify="space-around"
@@ -81,7 +86,7 @@ export default function App(props: { rootId: DocumentId }) {
             // bg="brand"
             w="100%"
           >
-            {state.countUpDate && countUpDays >= 0 && (
+            {countUpDate && countUpDays >= 0 && (
               <div>
                 <Text>
                   {dayjs().isSame(selectedDate, "date") ? "It's" : "That's"} day
@@ -117,7 +122,39 @@ export default function App(props: { rootId: DocumentId }) {
               )}
           </Flex>
         )}
+
         <Container size="xs" px="xs">
+          {props.params && (
+            <Flex direction="column" mb="xl" ml="lg">
+              <Text color="dimmed">
+                You're checking out someone else's countup/countdown
+              </Text>
+              <Group>
+                <Button
+                  variant="subtle"
+                  color="gray"
+                  onClick={() =>
+                    (window.location.href =
+                      window.location.origin + window.location.pathname)
+                  }
+                >
+                  Clear
+                </Button>
+                <Button
+                  variant="subtle"
+                  color="gray"
+                  onClick={() => {
+                    changeState((s) => {
+                      s.countDownDate = countDownDate;
+                      s.countUpDate = countUpDate;
+                    });
+                  }}
+                >
+                  Make this yours
+                </Button>
+              </Group>
+            </Flex>
+          )}
           <Calendar
             size="xl"
             fullWidth
@@ -125,8 +162,8 @@ export default function App(props: { rootId: DocumentId }) {
             onChange={setSelectedDate}
             renderDay={(date) => {
               const day = date.getDate();
-              const daysSinceStart = state.countUpDate
-                ? dayjs(date).diff(state.countUpDate, "day")
+              const daysSinceStart = countUpDate
+                ? dayjs(date).diff(countUpDate, "day")
                 : -1;
               return (
                 <div>
@@ -181,19 +218,55 @@ export default function App(props: { rootId: DocumentId }) {
           >
             Go to today
           </Button>
+
           <Button
             variant={showSettings ? "filled" : "subtle"}
             color={showSettings ? "blue" : "gray"}
             onClick={() => setShowSettings((s) => !s)}
+            disabled={!!props.params}
           >
             Settings
           </Button>
-          <Button variant="subtle" color="gray" disabled>
-            Share
-          </Button>
+          <CopyButton value={getShareUrl({ s: countUpDate, e: countDownDate })}>
+            {({ copied, copy }) => (
+              <Button
+                variant="subtle"
+                color={copied ? "teal" : "gray"}
+                onClick={copy}
+              >
+                {copied ? "Copied url" : "Share"}
+              </Button>
+            )}
+          </CopyButton>
         </Container>
         {showSettings && (
           <Container size="xs" px="xs">
+            <br />
+            <Title order={3}>Count Up</Title>
+            <DatePicker
+              renderDay={(date) => (
+                <div
+                  style={
+                    dayjs(date).isSame(new Date(), "date")
+                      ? {
+                          fontWeight: "bold",
+                        }
+                      : undefined
+                  }
+                >
+                  {date.getDate()}
+                </div>
+              )}
+              defaultValue={countUpDate}
+              label="Date to count up from"
+              placeholder="Select date"
+              value={countUpDate}
+              onChange={(x) => {
+                changeState((s) => {
+                  s.countUpDate = x;
+                });
+              }}
+            />
             <br />
             <Title order={3}>Count Down</Title>
             <DatePicker
@@ -221,32 +294,6 @@ export default function App(props: { rootId: DocumentId }) {
               }}
             />
             <br />
-            <Title order={3}>Count Up</Title>
-            <DatePicker
-              renderDay={(date) => (
-                <div
-                  style={
-                    dayjs(date).isSame(new Date(), "date")
-                      ? {
-                          fontWeight: "bold",
-                        }
-                      : undefined
-                  }
-                >
-                  {date.getDate()}
-                </div>
-              )}
-              defaultValue={state.countUpDate}
-              label="Date to count up from"
-              placeholder="Select date"
-              value={state.countUpDate}
-              onChange={(x) => {
-                changeState((s) => {
-                  s.countUpDate = x;
-                });
-              }}
-            />
-            <br />
             <br />
             <div>If you have a problem:</div>
             <DeleteStorageButton />
@@ -269,3 +316,19 @@ const DeleteStorageButton = () => (
     reset localStorage
   </Button>
 );
+
+function getShareUrl(params: Params): string {
+  const urlParams = new URLSearchParams();
+  if (params.s) {
+    urlParams.set("s", dayjs(params.s).format(urlDateFormat));
+  }
+  if (params.e) {
+    urlParams.set("e", dayjs(params.e).format(urlDateFormat));
+  }
+  return (
+    window.location.origin +
+    window.location.pathname +
+    "?" +
+    urlParams.toString()
+  );
+}
