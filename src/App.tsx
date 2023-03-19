@@ -22,7 +22,7 @@ import { useState } from "react";
 
 import { Params, State, urlDateFormat } from "./types";
 import dayjs from "dayjs";
-import { createParams } from "./util";
+import { createParams, getShareUrl } from "./util";
 
 export default function App(props: { rootId: DocumentId; params?: Params }) {
   const isSmallView = useMediaQuery("(max-width: 570px)");
@@ -45,15 +45,24 @@ export default function App(props: { rootId: DocumentId; params?: Params }) {
     );
   }
 
+  // rip
   const countUpDate =
-    props.params && props.params.s ? props.params.s : state.countUpDate;
+    props.params && props.params.s
+      ? props.params.s
+      : state?.countUpDate || null;
   const countDownDate =
-    props.params && props.params.e ? props.params.e : state.countDownDate;
-  const title = props.params && props.params.t ? props.params.t : state.title;
+    props.params && props.params.e
+      ? props.params.e
+      : state?.countDownDate || null;
+  const title =
+    props.params && props.params.t ? props.params.t : state?.title || "";
 
   const countUpDays = dayjs(selectedDate).diff(countUpDate, "day");
   const countUpWeeks = dayjs(selectedDate).diff(countUpDate, "week");
   const countDownDays = dayjs(countDownDate).diff(selectedDate, "day");
+
+  const hasNoDates = !countUpDate && !countDownDate;
+  const actuallyShowSettings = hasNoDates || showSettings;
 
   return (
     <MantineProvider
@@ -170,62 +179,67 @@ export default function App(props: { rootId: DocumentId; params?: Params }) {
               </Paper>
             </Flex>
           )}
-          <Paper withBorder p="lg" radius="md">
-            <Calendar
-              size="xl"
-              fullWidth
-              value={selectedDate}
-              onChange={setSelectedDate}
-              renderDay={(date) => {
-                const day = date.getDate();
-                const daysSinceStart = countUpDate
-                  ? dayjs(date).diff(countUpDate, "day")
-                  : -1;
-                return (
-                  <div>
-                    {state.countDownDate &&
-                      dayjs(date).isSame(state.countDownDate, "date") && (
+          {!hasNoDates && (
+            <Paper withBorder p="lg" radius="md">
+              <Calendar
+                weekendDays={[]}
+                size="xl"
+                fullWidth
+                value={selectedDate}
+                onChange={setSelectedDate}
+                renderDay={(date) => {
+                  const day = date.getDate();
+                  const daysSinceStart = countUpDate
+                    ? dayjs(date).diff(countUpDate, "day")
+                    : -1;
+                  return (
+                    <div>
+                      {state.countDownDate &&
+                        dayjs(date).isSame(state.countDownDate, "date") && (
+                          <div
+                            style={{
+                              position: "absolute",
+                              lineHeight: "1em",
+                              fontSize: ".6em",
+                              top: 0,
+                              right: 0,
+                            }}
+                          >
+                            !!!
+                          </div>
+                        )}
+                      {daysSinceStart >= 0 && daysSinceStart % 7 === 0 && (
                         <div
                           style={{
                             position: "absolute",
                             lineHeight: "1em",
                             fontSize: ".6em",
                             top: 0,
-                            right: 0,
+                            left: 0,
                           }}
                         >
-                          !!!
+                          wk {daysSinceStart / 7 + 1}
                         </div>
                       )}
-                    {daysSinceStart >= 0 && daysSinceStart % 7 === 0 && (
-                      <div
-                        style={{
-                          position: "absolute",
-                          lineHeight: "1em",
-                          fontSize: ".6em",
-                          top: 0,
-                          left: 0,
+                      <Box
+                        sx={{
+                          fontWeight: dayjs(date).isSame(new Date(), "date")
+                            ? "bold"
+                            : "unset",
+                          color:
+                            countUpDate && dayjs(date).isBefore(countUpDate)
+                              ? "lightgray"
+                              : "unset",
                         }}
                       >
-                        wk {daysSinceStart / 7 + 1}
-                      </div>
-                    )}
-                    <div
-                      style={
-                        dayjs(date).isSame(new Date(), "date")
-                          ? {
-                              fontWeight: "bold",
-                            }
-                          : undefined
-                      }
-                    >
-                      {day}
+                        {day}
+                      </Box>
                     </div>
-                  </div>
-                );
-              }}
-            />
-          </Paper>
+                  );
+                }}
+              />
+            </Paper>
+          )}
           <br />
           <Button
             variant="subtle"
@@ -235,8 +249,8 @@ export default function App(props: { rootId: DocumentId; params?: Params }) {
             Go to today
           </Button>
           <Button
-            variant={showSettings ? "filled" : "subtle"}
-            color={showSettings ? "blue" : "gray"}
+            variant={actuallyShowSettings ? "filled" : "subtle"}
+            color={actuallyShowSettings ? "blue" : "gray"}
             onClick={() => setShowSettings((s) => !s)}
             disabled={!!props.params}
           >
@@ -256,22 +270,8 @@ export default function App(props: { rootId: DocumentId; params?: Params }) {
             )}
           </CopyButton>
         </Container>
-        {showSettings && (
+        {actuallyShowSettings && (
           <Container size="xs" px="xs" mt="xl" w="100%">
-            <Stack spacing="xs" mb="xl">
-              <Title order={3}>About</Title>
-              <TextInput
-                label="Title"
-                placeholder="my bday"
-                value={title}
-                disabled={!!props.params}
-                onChange={(e) => {
-                  changeState((s) => {
-                    s.title = e.target.value;
-                  });
-                }}
-              />
-            </Stack>
             <Stack spacing="xs" mb="xl">
               <Title order={3}>Count Up</Title>
               <DatePicker
@@ -296,6 +296,10 @@ export default function App(props: { rootId: DocumentId; params?: Params }) {
                 onChange={(x) => {
                   changeState((s) => {
                     s.countUpDate = x;
+                    if (hasNoDates) {
+                      // if just set your first date, keep the settings open
+                      setShowSettings(true);
+                    }
                   });
                 }}
               />
@@ -324,6 +328,24 @@ export default function App(props: { rootId: DocumentId; params?: Params }) {
                 onChange={(x) => {
                   changeState((s) => {
                     s.countDownDate = x;
+                    if (hasNoDates) {
+                      // if just set your first date, keep the settings open
+                      setShowSettings(true);
+                    }
+                  });
+                }}
+              />
+            </Stack>
+            <Stack spacing="xs" mb="xl">
+              <Title order={3}>About</Title>
+              <TextInput
+                label="Title"
+                placeholder="my bday"
+                value={title}
+                disabled={!!props.params}
+                onChange={(e) => {
+                  changeState((s) => {
+                    s.title = e.target.value;
                   });
                 }}
               />
@@ -387,22 +409,3 @@ const ClearUrlButton = ({ label = "" }: { label?: string }) => (
     {label ? label : "Clear url"}
   </Button>
 );
-
-function getShareUrl(params: Params): string {
-  const urlParams = new URLSearchParams();
-  if (params.s) {
-    urlParams.set("s", dayjs(params.s).format(urlDateFormat));
-  }
-  if (params.e) {
-    urlParams.set("e", dayjs(params.e).format(urlDateFormat));
-  }
-  if (params.t) {
-    urlParams.set("t", encodeURIComponent(params.t));
-  }
-  return (
-    window.location.origin +
-    window.location.pathname +
-    "?" +
-    urlParams.toString()
-  );
-}

@@ -20,3 +20,22 @@ export function createParams(maybeUrl?: string): Params | undefined {
 
   return Object.values(params).length > 0 ? params : undefined;
 }
+
+export function getShareUrl(params: Params): string {
+  const urlParams = new URLSearchParams();
+  if (params.s) {
+    urlParams.set("s", dayjs(params.s).format(urlDateFormat));
+  }
+  if (params.e) {
+    urlParams.set("e", dayjs(params.e).format(urlDateFormat));
+  }
+  if (params.t) {
+    urlParams.set("t", encodeURIComponent(params.t));
+  }
+  return (
+    window.location.origin +
+    window.location.pathname +
+    "?" +
+    urlParams.toString()
+  );
+}
