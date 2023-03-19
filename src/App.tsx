@@ -20,7 +20,7 @@ import { Calendar, DatePicker } from "@mantine/dates";
 import { useMediaQuery } from "@mantine/hooks";
 import { useState } from "react";
 
-import { Params, State, urlDateFormat } from "./types";
+import { Params, State } from "./types";
 import dayjs from "dayjs";
 import { createParams, getShareUrl } from "./util";
 
@@ -171,6 +171,10 @@ export default function App(props: { rootId: DocumentId; params?: Params }) {
                         s.countDownDate = countDownDate;
                         s.countUpDate = countUpDate;
                       });
+                      setTimeout(() => {
+                        window.location.href =
+                          window.location.origin + window.location.pathname;
+                      }, 800);
                     }}
                   >
                     Make this yours
