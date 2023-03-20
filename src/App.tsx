@@ -15,16 +15,23 @@ import {
   Paper,
   Textarea,
   Stack,
+  useMantineTheme,
 } from "@mantine/core";
 import { Calendar, DatePicker } from "@mantine/dates";
 import { useMediaQuery } from "@mantine/hooks";
 import { useState } from "react";
 
-import { Params, State } from "./types";
 import dayjs from "dayjs";
+import * as isSameOrAfter from "dayjs/plugin/isSameOrAfter";
+import * as isSameOrBefore from "dayjs/plugin/isSameOrBefore";
+dayjs.extend(isSameOrAfter);
+dayjs.extend(isSameOrBefore);
+
+import { Params, State } from "./types";
 import { createParams, getShareUrl } from "./util";
 
 export default function App(props: { rootId: DocumentId; params?: Params }) {
+  const theme = useMantineTheme();
   const isSmallView = useMediaQuery("(max-width: 570px)");
   const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
   const [showSettings, setShowSettings] = useState(false);
@@ -84,6 +91,18 @@ export default function App(props: { rootId: DocumentId; params?: Params }) {
           ],
         },
         primaryColor: "brand",
+        components: {
+          Calendar: {
+            styles: {
+              cell: {
+                border: 0,
+              },
+              day: {
+                borderRadius: 0,
+              },
+            },
+          },
+        },
       }}
     >
       {!!countUpDays && !!countDownDays && (
@@ -93,8 +112,36 @@ export default function App(props: { rootId: DocumentId; params?: Params }) {
           color="orange"
           sx={(theme) => ({
             backgroundImage: theme.fn.gradient({
-              from: "teal",
-              to: "blue",
+              from: theme.colors.teal[4],
+              to: theme.colors.blue[6],
+              deg: 0,
+            }),
+          })}
+        />
+      )}
+      {!countUpDays && !!countDownDays && (
+        <Progress
+          radius={0}
+          value={(0 / countDownDays) * 100}
+          color="orange"
+          sx={(theme) => ({
+            backgroundImage: theme.fn.gradient({
+              from: theme.colors.blue[4],
+              to: theme.colors.blue[6],
+              deg: 45,
+            }),
+          })}
+        />
+      )}
+      {!!countUpDays && !countDownDays && (
+        <Progress
+          radius={0}
+          value={(0 / countDownDays) * 100}
+          color="orange"
+          sx={(theme) => ({
+            backgroundImage: theme.fn.gradient({
+              from: theme.colors.orange[4],
+              to: theme.colors.orange[6],
               deg: 45,
             }),
           })}
@@ -191,13 +238,28 @@ export default function App(props: { rootId: DocumentId; params?: Params }) {
                 fullWidth
                 value={selectedDate}
                 onChange={setSelectedDate}
+                dayStyle={(date, modifiers) => {
+                  if (!modifiers.selected) {
+                    return {
+                      backgroundColor:
+                        dayjs(date).isSameOrAfter(countUpDate) &&
+                        dayjs(date).isSameOrBefore(new Date())
+                          ? theme.colors.orange[0]
+                          : dayjs(date).isAfter(new Date()) &&
+                            dayjs(date).isSameOrBefore(countDownDate)
+                          ? theme.colors.blue[0]
+                          : "transparent",
+                    };
+                  }
+                  return {};
+                }}
                 renderDay={(date) => {
                   const day = date.getDate();
                   const daysSinceStart = countUpDate
                     ? dayjs(date).diff(countUpDate, "day")
                     : -1;
                   return (
-                    <div>
+                    <Box>
                       {state.countDownDate &&
                         dayjs(date).isSame(state.countDownDate, "date") && (
                           <div
@@ -212,21 +274,33 @@ export default function App(props: { rootId: DocumentId; params?: Params }) {
                             !!!
                           </div>
                         )}
-                      {daysSinceStart >= 0 && daysSinceStart % 7 === 0 && (
-                        <div
-                          style={{
-                            position: "absolute",
-                            lineHeight: "1em",
-                            fontSize: ".6em",
-                            top: 0,
-                            left: 0,
-                          }}
-                        >
-                          wk {daysSinceStart / 7 + 1}
-                        </div>
-                      )}
+                      {dayjs(date).isSameOrAfter(countUpDate) &&
+                        dayjs(date).isSameOrBefore(countDownDate) &&
+                        daysSinceStart >= 0 &&
+                        daysSinceStart % 7 === 0 && (
+                          <div
+                            style={{
+                              position: "absolute",
+                              lineHeight: "1em",
+                              fontSize: ".6em",
+                              top: 0,
+                              left: 0,
+                            }}
+                          >
+                            wk {daysSinceStart / 7 + 1}
+                          </div>
+                        )}
                       <Box
-                        sx={{
+                        sx={(theme) => ({
+                          borderTop: `2px solid ${
+                            dayjs(date).isSameOrAfter(countUpDate) &&
+                            dayjs(date).isSameOrBefore(new Date())
+                              ? theme.colors.orange[4]
+                              : dayjs(date).isAfter(new Date()) &&
+                                dayjs(date).isSameOrBefore(countDownDate)
+                              ? theme.colors.blue[4]
+                              : "transparent"
+                          }`,
                           fontWeight: dayjs(date).isSame(new Date(), "date")
                             ? "bold"
                             : "unset",
@@ -234,11 +308,11 @@ export default function App(props: { rootId: DocumentId; params?: Params }) {
                             countUpDate && dayjs(date).isBefore(countUpDate)
                               ? "lightgray"
                               : "unset",
-                        }}
+                        })}
                       >
                         {day}
                       </Box>
-                    </div>
+                    </Box>
                   );
                 }}
               />
