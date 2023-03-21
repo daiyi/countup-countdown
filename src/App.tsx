@@ -16,6 +16,7 @@ import {
   Textarea,
   Stack,
   useMantineTheme,
+  Checkbox,
 } from "@mantine/core";
 import { Calendar, DatePicker } from "@mantine/dates";
 import { useMediaQuery } from "@mantine/hooks";
@@ -63,6 +64,10 @@ export default function App(props: { rootId: DocumentId; params?: Params }) {
       : state?.countDownDate || null;
   const title =
     props.params && props.params.t ? props.params.t : state?.title || "";
+  const displaySettings =
+    props.params && props.params.d
+      ? props.params.d
+      : state?.displaySettings || { calendar: true };
 
   const countUpDays = dayjs(selectedDate).diff(countUpDate, "day");
   const countUpWeeks = dayjs(selectedDate).diff(countUpDate, "week");
@@ -230,7 +235,7 @@ export default function App(props: { rootId: DocumentId; params?: Params }) {
               </Paper>
             </Flex>
           )}
-          {!hasNoDates && (
+          {!hasNoDates && displaySettings?.calendar && (
             <Paper withBorder p="lg" radius="md">
               <Calendar
                 weekendDays={[]}
@@ -335,7 +340,12 @@ export default function App(props: { rootId: DocumentId; params?: Params }) {
             Settings
           </Button>
           <CopyButton
-            value={getShareUrl({ s: countUpDate, e: countDownDate, t: title })}
+            value={getShareUrl({
+              s: countUpDate,
+              e: countDownDate,
+              t: title,
+              d: displaySettings,
+            })}
           >
             {({ copied, copy }) => (
               <Button
@@ -424,6 +434,21 @@ export default function App(props: { rootId: DocumentId; params?: Params }) {
                 onChange={(e) => {
                   changeState((s) => {
                     s.title = e.target.value;
+                  });
+                }}
+              />
+            </Stack>
+            <Stack spacing="xs" mb="xl">
+              <Title order={3}>Display</Title>
+              <Checkbox
+                label="Show calendar"
+                checked={displaySettings?.calendar || false}
+                onChange={(e) => {
+                  changeState((s) => {
+                    if (!s.displaySettings) {
+                      s.displaySettings = {};
+                    }
+                    s.displaySettings.calendar = e.target.checked;
                   });
                 }}
               />
