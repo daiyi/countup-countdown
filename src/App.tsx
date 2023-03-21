@@ -23,8 +23,8 @@ import { useMediaQuery } from "@mantine/hooks";
 import { useState } from "react";
 
 import dayjs from "dayjs";
-import * as isSameOrAfter from "dayjs/plugin/isSameOrAfter";
-import * as isSameOrBefore from "dayjs/plugin/isSameOrBefore";
+import isSameOrAfter from "dayjs/plugin/isSameOrAfter";
+import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
 dayjs.extend(isSameOrAfter);
 dayjs.extend(isSameOrBefore);
 
