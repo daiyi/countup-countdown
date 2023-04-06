@@ -54,21 +54,17 @@ export default function App(props: { rootId: DocumentId; params?: Params }) {
     );
   }
 
-  // rip
-  const countUpDate =
-    props.params && props.params.s
-      ? props.params.s
-      : state?.countUpDate || null;
-  const countDownDate =
-    props.params && props.params.e
-      ? props.params.e
-      : state?.countDownDate || null;
-  const title =
-    props.params && props.params.t ? props.params.t : state?.title || "";
-  const displaySettings =
-    props.params && props.params.d
-      ? props.params.d
-      : state?.displaySettings || { calendar: true };
+  // rip. If there's params, show incoming params. If not, show what's saved in state
+  const countUpDate = props.params
+    ? props.params.s
+    : state?.countUpDate || null;
+  const countDownDate = props.params
+    ? props.params.e
+    : state?.countDownDate || null;
+  const title = props.params ? props.params.t : state?.title || "";
+  const displaySettings = props.params
+    ? props.params.d
+    : state?.displaySettings || { calendar: true };
 
   const countUpDays = dayjs(selectedDate).diff(countUpDate, "day");
   const countUpWeeks = dayjs(selectedDate).diff(countUpDate, "week");
@@ -154,7 +150,7 @@ export default function App(props: { rootId: DocumentId; params?: Params }) {
         />
       )}
       <Flex gap="xl" align="center" direction="column" wrap="wrap">
-        {(countUpDate || state.countDownDate) && (
+        {countUpDate && (
           <Container size="xs" w="100%">
             <Flex
               gap="lg"
@@ -178,26 +174,30 @@ export default function App(props: { rootId: DocumentId; params?: Params }) {
                   </Text>
                 </div>
               )}
-              {state.countDownDate &&
-                dayjs(state.countDownDate).diff(selectedDate, "day", true) >=
-                  0 && (
+              {countDownDate &&
+                dayjs(countDownDate).diff(selectedDate, "day", true) >= 0 && (
                   <div>
                     <Text>
                       {dayjs().isSame(selectedDate, "date")
                         ? "Days to go"
                         : "Days from there"}
                     </Text>
+
                     <Text fz="36px" fw="bold" color="blue.9">
-                      {countDownDays + 1}
+                      {countDownDays}
                     </Text>
-                    <Text fz="xs" c="dimmed" style={{ whiteSpace: "nowrap" }}>
-                      ({((countDownDays + 1) / 7.0).toFixed(1)} weeks)
-                    </Text>
+
+                    {countDownDate &&
+                    dayjs(selectedDate).isSame(countDownDate, "date") ? (
+                      <Text fz="xs" c="dimmed" style={{ whiteSpace: "nowrap" }}>
+                        THAT'S TODAY
+                      </Text>
+                    ) : (
+                      <Text fz="xs" c="dimmed" style={{ whiteSpace: "nowrap" }}>
+                        ({(countDownDays / 7.0).toFixed(1)} weeks)
+                      </Text>
+                    )}
                   </div>
-                )}
-              {state.countDownDate &&
-                dayjs(selectedDate).isSame(state.countDownDate, "date") && (
-                  <div>THAT'S TODAY</div>
                 )}
             </Flex>
           </Container>
@@ -208,14 +208,10 @@ export default function App(props: { rootId: DocumentId; params?: Params }) {
               <Paper p="lg" bg="gray.0">
                 <Text c="dimmed">
                   You're checking out{" "}
-                  {state.title ? (
-                    <em>{state.title}</em>
-                  ) : (
-                    "someone else's countdown"
-                  )}
+                  {title ? <em>{title}</em> : "someone else's countdown"}
                 </Text>
                 <Group position="right" mt="md">
-                  <ClearUrlButton label="Back to your countdown" />
+                  <ClearUrlButton label="Back to yours" />
                   <Button
                     variant="subtle"
                     color="gray"
@@ -232,7 +228,7 @@ export default function App(props: { rootId: DocumentId; params?: Params }) {
                       }, 800);
                     }}
                   >
-                    Make this yours
+                    Save this one
                   </Button>
                 </Group>
               </Paper>
@@ -270,8 +266,8 @@ export default function App(props: { rootId: DocumentId; params?: Params }) {
                     : -1;
                   return (
                     <Box>
-                      {state.countDownDate &&
-                        dayjs(date).isSame(state.countDownDate, "date") && (
+                      {countDownDate &&
+                        dayjs(date).isSame(countDownDate, "date") && (
                           <div
                             style={{
                               position: "absolute",
@@ -417,10 +413,10 @@ export default function App(props: { rootId: DocumentId; params?: Params }) {
                     {date.getDate()}
                   </div>
                 )}
-                defaultValue={state.countDownDate}
+                defaultValue={countDownDate}
                 label="Date to count down to"
                 placeholder="Select date"
-                value={state.countDownDate}
+                value={countDownDate}
                 onChange={(x) => {
                   changeState((s) => {
                     s.countDownDate = x;
