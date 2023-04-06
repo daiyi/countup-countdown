@@ -173,7 +173,7 @@ export default function App(props: { rootId: DocumentId; params?: Params }) {
                     {countUpDays}
                   </Text>
                   <Text fz="xs" c="dimmed" style={{ whiteSpace: "nowrap" }}>
-                    ({countUpWeeks + 1} weeks {countUpDays % 7} days)
+                    ({countUpWeeks} weeks {countUpDays % 7} days)
                   </Text>
                 </div>
               )}
