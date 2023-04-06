@@ -35,6 +35,7 @@ export default function App(props: { rootId: DocumentId; params?: Params }) {
   const theme = useMantineTheme();
   const isSmallView = useMediaQuery("(max-width: 570px)");
   const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
+  const [month, setMonth] = useState(selectedDate || undefined);
   const [showSettings, setShowSettings] = useState(false);
   const [redeemError, setRedeemError] = useState("");
 
@@ -245,6 +246,8 @@ export default function App(props: { rootId: DocumentId; params?: Params }) {
                 fullWidth
                 value={selectedDate}
                 onChange={setSelectedDate}
+                month={month}
+                onMonthChange={setMonth}
                 dayStyle={(date, modifiers) => {
                   if (!modifiers.selected) {
                     return {
@@ -329,7 +332,10 @@ export default function App(props: { rootId: DocumentId; params?: Params }) {
           <Button
             variant="subtle"
             color="gray"
-            onClick={() => setSelectedDate(new Date())}
+            onClick={() => {
+              setSelectedDate(new Date());
+              setMonth(new Date());
+            }}
           >
             Go to today
           </Button>
