@@ -222,6 +222,8 @@ export default function App(props: { rootId: DocumentId; params?: Params }) {
                       changeState((s) => {
                         s.countDownDate = countDownDate;
                         s.countUpDate = countUpDate;
+                        s.title = title;
+                        s.displaySettings = displaySettings;
                       });
                       setTimeout(() => {
                         window.location.href =
