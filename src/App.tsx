@@ -217,10 +217,10 @@ export default function App(props: { rootId: DocumentId; params?: Params }) {
                     color="gray"
                     onClick={() => {
                       changeState((s) => {
-                        s.countDownDate = countDownDate;
-                        s.countUpDate = countUpDate;
+                        s.countDownDate = countDownDate || null;
+                        s.countUpDate = countUpDate || null;
                         s.title = title;
-                        s.displaySettings = displaySettings;
+                        s.displaySettings = displaySettings || {};
                       });
                       setTimeout(() => {
                         window.location.href =
